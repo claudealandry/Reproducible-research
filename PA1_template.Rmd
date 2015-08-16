@@ -33,10 +33,11 @@ total.steps.per.day <- df %>%
 ##Creating an histogram of the total number of steps taken each day.
 
 ```{r, echo=TRUE}
-plot1 <- ggplot(total.steps.per.day, aes(date, total.steps)) +
+
+ggplot(total.steps.per.day, aes(x = date, y = total.steps)) +
         geom_histogram(stat = "identity", color = "black", fill = "orange") +
         labs(title = "Total steps per day", x = "Day", y = "Total number of steps")
-plot1
+
 ```
 ##Calculating the mean and median of the total number of steps taken per day and ignoring the na's values. 
 ```{r, echo=TRUE}
@@ -57,7 +58,7 @@ mean.steps.per.interval <- df %>%
 ```
 ##Now, lets create the plot.
 ```{r, echo=TRUE}
-ggplot(mean.steps.per.interval, aes(interval,average.steps.interval)) +
+ggplot(mean.steps.per.interval, aes(interval, average.steps.interval)) +
         geom_line() +
         labs(title = "Average number of steps taken per 5-minute interval", x = "Interval",         y = "Average number of steps")
 ```
@@ -79,7 +80,7 @@ sum(!complete.cases(df))
 sum(is.na(df))
 
 ```
-Lets run a loop to replace these pesky NA's and also creating a new dataset in the process.
+We will replace the NA's with the mean of the interval. Lets run a loop to replace these pesky NA's and also creating a new dataset in the process.
 ```{r, echo=TRUE}
 new.df <- df
     for (i in 1:nrow(new.df)) {
@@ -96,7 +97,13 @@ new.total.steps.per.day <- new.df %>%
 
 ```
 
+Lets make a plot to see if there is an impact with the replacment.
+
 ```{r, echo=TRUE}
+library(gridExtra)
+plot1 <- ggplot(total.steps.per.day, aes(date, total.steps)) +
+         geom_histogram(stat = "identity", color = "black", fill = "orange") +
+         labs(title = "Total steps per day", x = "Day", y = "Total number of steps")
 plot2 <- ggplot(new.total.steps.per.day, aes(date, total.steps)) +
         geom_histogram(stat = "identity", color = "black", fill = "orange") +
         labs(title = "Total steps per day with NA's replaced", x = "Day", 
@@ -104,12 +111,14 @@ plot2 <- ggplot(new.total.steps.per.day, aes(date, total.steps)) +
 grid.arrange(plot1, plot2)
 ```
 
+
 ```{r, echo=TRUE}
 new.mean.of.steps.per.day <- mean(new.total.steps.per.day$total.steps, na.rm= TRUE)
 new.median.of.steps.per.day <- median(new.total.steps.per.day$total.steps, na.rm= TRUE)
 new.mean.of.steps.per.day
 new.median.of.steps.per.day
 ```
+
 We can see that by replacing NA's values with the interval mean we fill the plot with somewhat logical values!? But it do not change the other values otherwise, except
 now we see that the mean and the median are identical! Strange, to be explore further...
 
@@ -125,10 +134,17 @@ for (i in 1:nrow(new.df)) {
         new.df$level[i] <- "weekend"
 }
 new.df$level <- as.factor(new.df$level)
-table(new.df$level)
 
 ```
 
+Lets make a plot to see the comparison between weekdays and weekend.
+
 ```{r, echo=TRUE}
+new.mean.steps.per.interval <- aggregate(steps ~ interval + level, data = new.df, mean)
+library(lattice)
+xyplot(new.mean.steps.per.interval$steps ~ new.mean.steps.per.interval$interval | new.mean.steps.per.interval$level, layout=c(1,2), 
+       type="l", main="Average number of steps during weekdays or weekend", 
+       xlab="Interval", ylab="Average number of steps")
+```
 
-
+We can see that during the weekend, there is more activities during midday.
